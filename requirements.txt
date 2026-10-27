@@ -1,0 +1,6 @@
+google-genai
+chromadb
+streamlit
+requests
+python-dotenv
+gTTS

@@ -1,0 +1,12 @@
+# secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# local data (each person builds their own)
+chroma_db/
+media/
