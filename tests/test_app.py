@@ -128,3 +128,16 @@ def test_sidebar_photo_override(services: dict[str, list[str]]) -> None:
     assert not at.exception, at.exception
     assert store.get_media("pixabay-video-1")["metadata"]["kind"] == "photo"
     assert len(at.image) == 1
+
+
+def test_nonsense_request_shows_friendly_message(monkeypatch: pytest.MonkeyPatch,
+                                                 services: dict[str, list[str]]) -> None:
+    def not_a_scene(query: str) -> Plan:
+        raise plan.NotAScene(query)
+
+    monkeypatch.setattr(plan, "plan_request", not_a_scene)
+    at = ask("xqzv blorptastic")
+    assert "doesn't look like a scene" in at.warning[0].value
+    assert not at.error
+    assert services == {"pixabay": [], "describe": [], "web": []}  # nothing fetched
+    assert store.get_plan("xqzv blorptastic") is None and store.count() == 0  # nothing saved

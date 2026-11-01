@@ -48,6 +48,17 @@ def test_malformed_reply_falls_back_to_defaults(monkeypatch: pytest.MonkeyPatch,
                       "search_terms": "sunset beach", "fallback_terms": "sunset"}
 
 
+def test_non_scene_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    with pytest.raises(plan.NotAScene):
+        run_plan(monkeypatch, json.dumps({"is_scene": False, "search_terms": "surreal"}), query="xqzv blorptastic")
+
+
+@pytest.mark.parametrize("flag", [True, None, "false"])
+def test_only_an_explicit_false_rejects(monkeypatch: pytest.MonkeyPatch, flag: object) -> None:
+    """A missing or odd flag must never block a real request."""
+    assert run_plan(monkeypatch, json.dumps({"is_scene": flag}))["search_terms"] == "a lion chasing a zebra"
+
+
 def test_gemini_unavailable_is_raised_for_the_pipeline_to_handle(monkeypatch: pytest.MonkeyPatch) -> None:
     def down(*_a: object, **_k: object) -> str:
         raise RuntimeError("Gemini is unavailable right now")

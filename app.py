@@ -5,7 +5,7 @@ All the work happens in src/pipeline.py; this file only collects input and shows
 import streamlit as st
 
 from src import pipeline, store
-from src.plan import STYLES
+from src.plan import STYLES, NotAScene
 
 AUTO = "Auto"
 
@@ -68,6 +68,11 @@ def main() -> None:
     with st.status("Working…") as status:
         try:
             result = pipeline.run(query, overrides, lambda label: status.update(label=label))
+        except NotAScene:
+            status.update(label="Not a scene", state="error")
+            st.warning("That doesn't look like a scene I can show. Try describing something you could film, "
+                       "like “a rocket launching into space” or “a football player scoring a goal”.")
+            return
         except Exception as e:  # show any API/network failure in the UI instead of a stack trace
             status.update(label="Something went wrong", state="error")
             st.error(str(e))

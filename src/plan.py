@@ -29,6 +29,8 @@ PROMPT = """You turn a user's request into a media search plan. Reply with JSON 
 - "style": one of {styles}. Pick what fits the scene (wildlife = documentary, a match = sports commentator, a city = travel host).
 - "search_terms": ONE string of 2-4 plain keywords for a stock media site, e.g. "lion zebra chase".
 - "fallback_terms": ONE string of 1-2 broader keywords in case nothing is found, e.g. "lion".
+- "is_scene": false if the request is NOT something a camera could photograph or film: random letters, made-up words,
+  a question or chat ("what is 2+2", "hello"), or something abstract/impossible ("the color of Tuesday"). Otherwise true.
 
 User request: {query}"""
 
@@ -87,14 +89,21 @@ def guess_plan(query: str) -> Plan:
                      "duration_s": 60 if "minute" in words else 45 if "45" in words else 30}, query)
 
 
+class NotAScene(ValueError):
+    """The request isn't something that can be photographed or filmed (gibberish, a question, an abstract idea)."""
+
+
 def plan_request(query: str) -> Plan:
-    """Ask Gemini to plan the request. Raises RuntimeError if Gemini is unavailable."""
+    """Ask Gemini to plan the request. Raises NotAScene for non-scenes and RuntimeError if Gemini is unavailable."""
     text = generate(
         PROMPT.format(styles=", ".join(STYLES), query=query),
         types.GenerateContentConfig(response_mime_type="application/json", temperature=0.2),
         timeout_s=PLAN_TIMEOUT_S,
     )
-    return _to_plan(_parse(text), query)
+    raw = _parse(text)
+    if raw.get("is_scene") is False:
+        raise NotAScene(query)
+    return _to_plan(raw, query)
 
 
 if __name__ == "__main__":
