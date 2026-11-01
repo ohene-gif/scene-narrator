@@ -1,10 +1,10 @@
-"""Have Gemini narrate a library match in a TV style, then voice it with gTTS."""
+"""Have the AI (Gemini, or Groq as backup) narrate a library match in a TV style, then voice it with gTTS."""
 import hashlib
 from pathlib import Path
 
 from gtts import gTTS  # pyright: ignore[reportMissingTypeStubs]
 
-from src.gemini import generate
+from src.ai import generate
 from src.models import Match
 
 AUDIO_DIR = Path(__file__).resolve().parent.parent / "media" / "narration"

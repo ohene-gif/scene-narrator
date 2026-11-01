@@ -36,7 +36,7 @@ def services(monkeypatch: pytest.MonkeyPatch, temp_store: Path, files: dict[str,
             return []
         return [make_media("pixabay-video-1", kind, local_path=str(files[kind]), tags="lion, wildlife")]
 
-    def fake_describe(path: str, kind: Kind, tags: str = "") -> str:
+    def fake_describe(path: str, kind: Kind, tags: str = "", thumbnail_url: str = "") -> str:
         calls["describe"].append(path)
         return "0:00-0:10 A lion walks through tall golden grass."
 

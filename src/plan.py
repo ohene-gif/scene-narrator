@@ -1,13 +1,11 @@
 """Work out what the user wants: photo or video, how long, which narrator style, and what to search.
 
-plan_request() asks Gemini; guess_plan() is the offline keyword fallback used when Gemini is unavailable.
+plan_request() asks the AI (Gemini, or Groq as backup); guess_plan() is the offline keyword fallback.
 """
 import json
 from typing import Any, cast
 
-from google.genai import types
-
-from src.gemini import generate
+from src.ai import generate
 from src.models import Plan
 
 STYLES = ["documentary", "sports commentator", "travel host", "news anchor", "movie trailer", "storyteller"]
@@ -94,11 +92,9 @@ class NotAScene(ValueError):
 
 
 def plan_request(query: str) -> Plan:
-    """Ask Gemini to plan the request. Raises NotAScene for non-scenes and RuntimeError if Gemini is unavailable."""
+    """Ask Gemini to plan the request. Raises NotAScene for non-scenes and RuntimeError if no AI provider is available."""
     text = generate(
-        PROMPT.format(styles=", ".join(STYLES), query=query),
-        types.GenerateContentConfig(response_mime_type="application/json", temperature=0.2),
-        timeout_s=PLAN_TIMEOUT_S,
+        PROMPT.format(styles=", ".join(STYLES), query=query), json_mode=True, timeout_s=PLAN_TIMEOUT_S,
     )
     raw = _parse(text)
     if raw.get("is_scene") is False:

@@ -26,6 +26,7 @@ streamlit run app.py
 Free keys:
 - Gemini: https://aistudio.google.com (use a personal Google account)
 - Pixabay: https://pixabay.com/api/docs/ (key shown once logged in)
+- Groq (optional backup AI): https://console.groq.com, then API Keys. Used only when Gemini is busy or out of quota.
 
 ## Before a demo
 
@@ -40,7 +41,8 @@ Edit `DEMO_QUERIES` in `scripts/seed.py` to change the scenes. Re-running is saf
 a few requests per minute, so seed well before presenting. The library (`chroma_db/`, `media/`) is local and not in
 git, so run this on the machine you present from.
 
-If Gemini is busy or down, the app still reads the request from keywords and plays any saved scene.
+If Gemini is busy or out of quota, Groq takes over (planning, narration, and describing a photo or the video's
+thumbnail). If neither is available, the app still reads the request from keywords and plays any saved scene.
 
 ## Tests
 
@@ -56,7 +58,9 @@ basedpyright app.py src tests scripts   # strict type check
 |---|---|
 | `app.py` | Streamlit UI only |
 | `src/models.py` | Typed data shapes shared by all modules |
-| `src/gemini.py` | Gemini client with retry and model fallback |
+| `src/gemini.py` | Gemini client with a hard per-call deadline and model fallback |
+| `src/ai.py` | Gemini first, Groq as backup |
+| `src/groq_backup.py` | Groq client (backup provider) |
 | `src/plan.py` | Gemini decides photo/video, length, and narrator style |
 | `src/pixabay.py` | Fetch photos/videos from Pixabay |
 | `src/describe.py` | Gemini describes photos/videos |

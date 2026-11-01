@@ -30,7 +30,7 @@ def render(result: pipeline.Result) -> None:
     if result.from_library:
         st.success("Found in your library: instant, no new download.")
     else:
-        st.info("New scene: fetched from Pixabay, described by Gemini, enriched with Wikipedia facts, "
+        st.info("New scene: fetched from Pixabay, described by AI, enriched with Wikipedia facts, "
                 "and saved to your library for next time.")
 
     left, right = st.columns([3, 2])
@@ -48,7 +48,7 @@ def render(result: pipeline.Result) -> None:
     with st.expander("Behind the scenes"):
         st.json({"plan": result.plan, "match_id": result.match["id"],
                  "match_distance": round(result.match["distance"], 3)})
-        st.markdown("**What Gemini saw**")
+        st.markdown("**What the AI saw**")
         st.write(result.match["description"])
         if meta["facts"]:
             st.markdown("**Facts from Wikipedia**")

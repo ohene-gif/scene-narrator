@@ -87,7 +87,8 @@ def fetch_and_save(query: str, plan: Plan, report: Report) -> Match | None:
         report("Looking up facts on Wikipedia…")
         facts = web.web_facts(plan["search_terms"])
         report(f"Gemini is watching the {media['kind']}…")
-        description = describe.describe_media(media["local_path"], media["kind"], media["tags"])
+        description = describe.describe_media(media["local_path"], media["kind"], media["tags"],
+                                              media["thumbnail"])
         store.add_media(media["id"], description, MediaRecord(**media, facts=facts, query=query))
     return store.get_media(media["id"])
 
