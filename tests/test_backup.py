@@ -1,5 +1,6 @@
 """Provider fallback: Groq takes over only when every Gemini model is unavailable."""
 import base64
+import time
 from pathlib import Path
 from typing import Any
 
@@ -128,3 +129,22 @@ def test_describe_video_without_thumbnail_reports_why(monkeypatch: pytest.Monkey
     with pytest.raises(RuntimeError, match="no thumbnail"):
         describe.describe_media(str(video), "video")
     assert groq_calls == []
+
+
+def test_slow_gemini_hands_over_to_groq_within_budget(monkeypatch: pytest.MonkeyPatch,
+                                                      groq_calls: list[dict[str, Any]]) -> None:
+    """End to end through the real gemini.generate: every model hangs, Groq answers once the budget is spent."""
+    class HangingModels:
+        def generate_content(self, **_: Any) -> None:
+            time.sleep(1)
+
+    class HangingClient:
+        models = HangingModels()
+
+    monkeypatch.setattr(gemini, "MODELS", ["a", "b", "c", "d"])
+    monkeypatch.setattr(gemini, "_client", HangingClient())
+    monkeypatch.setattr(gemini, "TOTAL_BUDGET_S", 0.3)
+    monkeypatch.setattr(gemini, "MIN_ATTEMPT_S", 0.05)
+    start = time.monotonic()
+    assert ai.generate("narrate this", timeout_s=5) == "from groq"
+    assert time.monotonic() - start < 0.9

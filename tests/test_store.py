@@ -2,16 +2,19 @@ from pathlib import Path
 
 import pytest
 
-from src import store
+from src import pipeline, store
 from tests.conftest import make_record
 
-GOOD_MATCH = 0.65  # mirrors app.GOOD_MATCH (app.py runs Streamlit on import, so it isn't imported here)
+GOOD_MATCH = pipeline.GOOD_MATCH
 LION = "A lioness sprints across dry savanna grass chasing a zebra."
 SANTORINI = "Sunset over white houses and blue domes in Santorini."
+WAVES = "Golden light catches the crest as the tide rolls over dark rocks and splashes into foam."
 
 
 def save_examples() -> None:
     store.add_media("v1", LION, make_record("v1", tags="lion, zebra, hunt, wildlife", query="a lion chasing a zebra"))
+    store.add_media("w1", WAVES, make_record("w1", tags="wave, rock, splash, sunset, sea, shore",
+                                             query="waves crashing on a beach at sunset"))
     store.add_media("p1", SANTORINI, make_record("p1", "photo", tags="santorini, greece, sunset",
                                                   query="greek island sunset"))
 
@@ -28,7 +31,8 @@ def test_related_wording_is_a_good_match(temp_store: Path, query: str) -> None:
     assert best["id"] == "v1" and best["distance"] < GOOD_MATCH
 
 
-@pytest.mark.parametrize("query", ["eiffel tower night", "football goal", "cooking pasta", "snowy mountains"])
+@pytest.mark.parametrize("query", ["eiffel tower night", "football goal", "cooking pasta", "snowy mountains",
+                                   "sailboat calm lake"])
 def test_unrelated_wording_is_not_a_good_match(temp_store: Path, query: str) -> None:
     save_examples()
     assert all(m["distance"] > GOOD_MATCH for m in store.search(query))

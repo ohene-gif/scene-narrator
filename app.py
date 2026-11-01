@@ -61,7 +61,7 @@ def main() -> None:
     st.caption("Describe any scene. We find it, and narrate it like a TV show.")
     overrides = sidebar()
 
-    query = st.text_input("What do you want to see?", placeholder="a one minute video of a lion chasing a zebra")
+    query = st.text_input("What do you want to see?", placeholder="a lioness with her cubs")
     if not query:
         return
 
@@ -71,7 +71,7 @@ def main() -> None:
         except NotAScene:
             status.update(label="Not a scene", state="error")
             st.warning("That doesn't look like a scene I can show. Try describing something you could film, "
-                       "like “a rocket launching into space” or “a football player scoring a goal”.")
+                       "like “a rocket launching into space” or “a lioness with her cubs”.")
             return
         except Exception as e:  # show any API/network failure in the UI instead of a stack trace
             status.update(label="Something went wrong", state="error")

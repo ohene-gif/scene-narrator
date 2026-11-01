@@ -11,7 +11,8 @@ from src import describe, narrate, pixabay, store, web
 from src import plan as planner
 from src.models import Kind, Match, Media, MediaRecord, Plan
 
-GOOD_MATCH = 0.65  # cosine distance; below this a saved item counts as a match (calibrated: related <= ~0.6)
+GOOD_MATCH = 0.60  # cosine distance; below this a saved item counts as a match (calibrated: related <= ~0.6,
+# unrelated >= ~0.8; a same-theme-but-different scene, "sailboat on a lake" vs "waves on a beach", scored 0.64)
 PHOTO_SECONDS = 25  # narration length for a still photo
 LENGTH_WINDOW = 15  # accept videos within +/- this many seconds of the requested length
 
@@ -93,7 +94,7 @@ def fetch_and_save(query: str, plan: Plan, report: Report) -> Match | None:
     return store.get_media(media["id"])
 
 
-def narration_for(query: str, match: Match, plan: Plan, report: Report) -> str:
+def narration_for(match: Match, plan: Plan, report: Report) -> str:
     """Reuse the saved narration for this item and style if there is one; otherwise write and save it."""
     cached = store.get_narration(match["id"], plan["style"])
     if cached:
@@ -101,7 +102,7 @@ def narration_for(query: str, match: Match, plan: Plan, report: Report) -> str:
     meta = match["metadata"]
     seconds = (meta["duration"] or plan["duration_s"]) if meta["kind"] == "video" else PHOTO_SECONDS
     report(f"Writing {plan['style']} narration…")
-    script = narrate.narrate(query, match, plan["style"], seconds)
+    script = narrate.narrate(match, plan["style"], seconds)
     store.save_narration(match["id"], plan["style"], script)
     return script
 
@@ -118,6 +119,6 @@ def run(query: str, overrides: Overrides, report: Report) -> Result | None:
     if match is None:
         return None
 
-    script = narration_for(query, match, plan, report)
+    script = narration_for(match, plan, report)
     report("Recording voice-over…")
     return Result(plan, match, cached, script, narrate.speak(script))

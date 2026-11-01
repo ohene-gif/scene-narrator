@@ -9,11 +9,12 @@ import time
 
 from src import pipeline
 
+# Each prompt describes what its saved clip actually shows (checked against the AI's description of the media).
 DEMO_QUERIES = [
-    "a lion chasing a zebra",
-    "a football player scoring a goal",
+    "a lioness with her cubs",
+    "a goalkeeper during a soccer match",
     "a photo of the Eiffel Tower at night",
-    "waves crashing on a beach at sunset",
+    "waves crashing on rocks at sunset",
     "a busy city street at night",
     "a rocket launching into space",
 ]

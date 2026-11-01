@@ -88,3 +88,22 @@ def test_all_models_failing_gives_clear_error(fake: FakeModels) -> None:
     with pytest.raises(RuntimeError, match="Gemini is unavailable right now") as info:
         gemini.generate("hi")
     assert "first: 503" in str(info.value) and "second: ConnectError" in str(info.value)
+
+
+def test_total_budget_stops_trying_more_models(monkeypatch: pytest.MonkeyPatch, fake: FakeModels) -> None:
+    """A slow Gemini must give up within the total budget, not wait timeout_s on every model."""
+    monkeypatch.setattr(gemini, "MODELS", ["first", "second", "third"])
+    monkeypatch.setattr(gemini, "MIN_ATTEMPT_S", 0.05)
+    fake.behaviour.update(first=Hang(), second=Hang(), third="unused")
+    start = time.monotonic()
+    with pytest.raises(RuntimeError, match="time budget"):
+        gemini.generate("hi", timeout_s=5, budget_s=0.3)
+    assert time.monotonic() - start < 0.9
+    assert "third" not in fake.calls
+
+
+def test_budget_left_after_fast_failures_is_used(monkeypatch: pytest.MonkeyPatch, fake: FakeModels) -> None:
+    """Instant failures (busy, out of quota) cost almost nothing, so the next model still gets its turn."""
+    monkeypatch.setattr(gemini, "MIN_ATTEMPT_S", 0.05)
+    fake.behaviour.update(first=api_error(503), second="from second")
+    assert gemini.generate("hi", timeout_s=5, budget_s=0.5) == "from second"
